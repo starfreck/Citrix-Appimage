@@ -141,10 +141,23 @@ rm -rf libjpeg8.deb control.tar.xz data.tar.xz debian-binary usr etc
 # Initialize Citrix configuration files so it doesn't crash on startup
 echo "Initializing Citrix config files..."
 mkdir -p "$APPDIR/opt/Citrix/ICAClient/config"
+# Copy all ini files from the extraction's config directory if it exists
+if [ -d "$TARGET_DIR/linuxx64/linuxx64.cor/config" ]; then
+    cp "$TARGET_DIR/linuxx64/linuxx64.cor/config/"*.ini "$APPDIR/opt/Citrix/ICAClient/config/" 2>/dev/null || true
+fi
+# Also copy from nls directories which often contain templates
 cp "$APPDIR/opt/Citrix/ICAClient/nls/en/"*.ini "$APPDIR/opt/Citrix/ICAClient/config/" 2>/dev/null || true
 cp "$APPDIR/opt/Citrix/ICAClient/nls/en/appsrv.template" "$APPDIR/opt/Citrix/ICAClient/config/appsrv.ini" 2>/dev/null || true
 cp "$APPDIR/opt/Citrix/ICAClient/nls/en/wfclient.template" "$APPDIR/opt/Citrix/ICAClient/config/wfclient.ini" 2>/dev/null || true
-cp "$APPDIR/opt/Citrix/ICAClient/nls/en.UTF-8/eula.txt" "$APPDIR/opt/Citrix/ICAClient/eula.txt" 2>/dev/null || true
+
+# Ensure eula.txt is in ICAROOT
+if [ -f "$TARGET_DIR/linuxx64/linuxx64.cor/eula.txt" ]; then
+    cp "$TARGET_DIR/linuxx64/linuxx64.cor/eula.txt" "$APPDIR/opt/Citrix/ICAClient/eula.txt"
+elif [ -f "$APPDIR/opt/Citrix/ICAClient/nls/en.UTF-8/eula.txt" ]; then
+    cp "$APPDIR/opt/Citrix/ICAClient/nls/en.UTF-8/eula.txt" "$APPDIR/opt/Citrix/ICAClient/eula.txt"
+elif [ -f "$APPDIR/opt/Citrix/ICAClient/nls/en/eula.txt" ]; then
+    cp "$APPDIR/opt/Citrix/ICAClient/nls/en/eula.txt" "$APPDIR/opt/Citrix/ICAClient/eula.txt"
+fi
 
 # Extract bundled WebKit and other potential dependencies
 echo "Extracting bundled WebKit..."
@@ -300,6 +313,22 @@ export XDG_DATA_DIRS="$APPDIR/usr/share:$XDG_DATA_DIRS"
 
 # Force X11 backend as Citrix has issues with Wayland in some AppImage environments
 export GDK_BACKEND=x11
+
+# Initialize user configuration directory if missing
+if [ ! -d "$HOME/.ICAClient" ]; then
+    echo "Initializing ~/.ICAClient..."
+    mkdir -p "$HOME/.ICAClient"
+fi
+
+# Auto-accept EULA to prevent crash
+touch "$HOME/.ICAClient/.eula_accepted"
+
+# Copy default config files to ~/.ICAClient if they are missing
+for cfg in All_Regions.ini All_REGIONS.ini appsrv.ini wfclient.ini module.ini; do
+    if [ ! -f "$HOME/.ICAClient/$cfg" ] && [ -f "$ICAROOT/config/$cfg" ]; then
+        cp "$ICAROOT/config/$cfg" "$HOME/.ICAClient/$cfg"
+    fi
+done
 
 # Run wfica if passed an .ica file, else run selfservice
 if [ "$#" -ge 1 ] && [[ "$1" == *.ica ]]; then
