@@ -194,13 +194,31 @@ libz.so.1
 libsystemd.so.0
 EOF
 
-# List of explicit libraries to include for secret storage and keyring support
+# List of explicit libraries to include for secret storage, authentication, and hardware acceleration
 EXPLICIT_LIBS=(
     "libsecret-1.so.0"
     "libgnome-keyring.so.0"
     "libp11-kit.so.0"
     "libck-connector.so.0"
     "gnome-keyring-pkcs11.so"
+    "libva.so.2"
+    "libva-drm.so.2"
+    "libva-x11.so.2"
+    "libcanberra-gtk.so.0"
+    "libcanberra-gtk3.so.0"
+    "libsoup-2.4.so.1"
+    "libidn.so.12"
+    "libpcsclite.so.1"
+    "libsm.so.6"
+    "libice.so.6"
+    "libxmu.so.6"
+    "libxpm.so.4"
+    "libspeexdsp.so.1"
+    "libnotify.so.4"
+    "libopenjp2.so.7"
+    "libasound.so.2"
+    "libgtk-x11-2.0.so.0"
+    "libwebkit2gtk-4.1.so.0"
 )
 
 # Function to find and copy a library and its dependencies
@@ -313,6 +331,10 @@ export XDG_DATA_DIRS="$APPDIR/usr/share:$XDG_DATA_DIRS"
 
 # Force X11 backend as Citrix has issues with Wayland in some AppImage environments
 export GDK_BACKEND=x11
+
+# WebKit tweaks for better compatibility with SAML flows and hardware
+export WEBKIT_DISABLE_COMPOSITING_MODE=1
+export WEBKIT_FORCE_COMPOSITING_MODE=0
 
 # Initialize user configuration directory if missing
 if [ ! -d "$HOME/.ICAClient" ]; then
