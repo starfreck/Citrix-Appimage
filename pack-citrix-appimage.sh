@@ -159,7 +159,7 @@ curl -L -s -o excludelist https://raw.githubusercontent.com/AppImageCommunity/pk
 grep -v '^#' excludelist | grep -v '^$' > excludelist.clean
 
 # Explicitly add core libraries to excludelist to prevent bundling them
-# Bundling these often breaks libsecret or other host integrations
+# Bundling these often breaks libsecret, GStreamer, or other host integrations
 cat >> excludelist.clean <<EOF
 libglib-2.0.so.0
 libgobject-2.0.so.0
@@ -172,6 +172,9 @@ libmount.so.1
 libblkid.so.1
 libstdc++.so.6
 libgcc_s.so.1
+libpcre2-8.so.0
+libgstreamer-1.0.so.0
+libgst*.so.1.0
 EOF
 
 # List of explicit libraries to include for secret storage and keyring support
@@ -245,6 +248,9 @@ rm -f "$APPDIR/usr/lib/libgthread-2.0.so.0"*
 rm -f "$APPDIR/usr/lib/libdbus-1.so.3"*
 rm -f "$APPDIR/usr/lib/libstdc++.so.6"*
 rm -f "$APPDIR/usr/lib/libgcc_s.so.1"*
+rm -f "$APPDIR/usr/lib/libpcre2-8.so.0"*
+rm -f "$APPDIR/usr/lib/libgst"*.so*
+rm -f "$APPDIR/usr/lib/libgstreamer"*.so*
 
 rm all_deps.txt excludelist excludelist.clean
 
