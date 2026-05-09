@@ -3,6 +3,8 @@ name: Build and Release Citrix AppImage
 on:
   schedule:
     - cron: '0 0 * * *' # Run daily at midnight
+  push:
+    branches: [ main ] # Trigger on every push to main
   workflow_dispatch: # Allow manual triggers
 
 jobs:
