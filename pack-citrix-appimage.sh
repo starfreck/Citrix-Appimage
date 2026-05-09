@@ -175,6 +175,10 @@ libgcc_s.so.1
 libpcre2-8.so.0
 libgstreamer-1.0.so.0
 libgst*.so.1.0
+libcrypto.so.3
+libssl.so.3
+libz.so.1
+libsystemd.so.0
 EOF
 
 # List of explicit libraries to include for secret storage and keyring support
@@ -251,6 +255,11 @@ rm -f "$APPDIR/usr/lib/libgcc_s.so.1"*
 rm -f "$APPDIR/usr/lib/libpcre2-8.so.0"*
 rm -f "$APPDIR/usr/lib/libgst"*.so*
 rm -f "$APPDIR/usr/lib/libgstreamer"*.so*
+
+rm -f "$APPDIR/usr/lib/libcrypto.so.3"*
+rm -f "$APPDIR/usr/lib/libssl.so.3"*
+rm -f "$APPDIR/usr/lib/libz.so.1"*
+rm -f "$APPDIR/usr/lib/libsystemd.so.0"*
 
 rm all_deps.txt excludelist excludelist.clean
 
