@@ -53,6 +53,12 @@ jobs:
           chmod +x automate-citrix.sh pack-citrix-appimage.sh
           ./automate-citrix.sh
 
+      - name: Generate release body
+        if: steps.check_release.outputs.exists == 'false'
+        id: release_body
+        run: |
+          echo "date=$(date)" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         if: steps.check_release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
@@ -64,6 +70,6 @@ jobs:
             Automated build of Citrix Workspace AppImage for Linux.
             
             Version: ${{ steps.check_version.outputs.version }}
-            Built on: $(date)
+            Built on: ${{ steps.release_body.outputs.date }}
           draft: false
           prerelease: false
