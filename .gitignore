@@ -1,0 +1,12 @@
+# Ignore build artifacts and downloads
+CitrixWorkspace.AppDir/
+linuxx64-*/
+*.tar.gz
+*.deb
+*.AppImage
+all_deps.txt
+excludelist
+excludelist.clean
+
+# Ignore log files
+*.log
