@@ -158,6 +158,22 @@ curl -L -s -o excludelist https://raw.githubusercontent.com/AppImageCommunity/pk
 # Remove blank lines and comments from excludelist to make grep faster
 grep -v '^#' excludelist | grep -v '^$' > excludelist.clean
 
+# Explicitly add core libraries to excludelist to prevent bundling them
+# Bundling these often breaks libsecret or other host integrations
+cat >> excludelist.clean <<EOF
+libglib-2.0.so.0
+libgobject-2.0.so.0
+libgio-2.0.so.0
+libgmodule-2.0.so.0
+libgthread-2.0.so.0
+libdbus-1.so.3
+libselinux.so.1
+libmount.so.1
+libblkid.so.1
+libstdc++.so.6
+libgcc_s.so.1
+EOF
+
 # List of explicit libraries to include for secret storage and keyring support
 EXPLICIT_LIBS=(
     "libsecret-1.so.0"
@@ -219,6 +235,17 @@ while read -r dep; do
         fi
     fi
 done < all_deps.txt
+
+# Final safeguard: Remove core libraries that should never be bundled
+rm -f "$APPDIR/usr/lib/libglib-2.0.so.0"*
+rm -f "$APPDIR/usr/lib/libgobject-2.0.so.0"*
+rm -f "$APPDIR/usr/lib/libgio-2.0.so.0"*
+rm -f "$APPDIR/usr/lib/libgmodule-2.0.so.0"*
+rm -f "$APPDIR/usr/lib/libgthread-2.0.so.0"*
+rm -f "$APPDIR/usr/lib/libdbus-1.so.3"*
+rm -f "$APPDIR/usr/lib/libstdc++.so.6"*
+rm -f "$APPDIR/usr/lib/libgcc_s.so.1"*
+
 rm all_deps.txt excludelist excludelist.clean
 
 # Create .desktop file
