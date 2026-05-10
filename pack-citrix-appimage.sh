@@ -167,6 +167,28 @@ echo "Extracting bundled WebKit..."
 mkdir -p "$APPDIR/opt/Citrix/ICAClient/webkit"
 tar -xf "$TARGET_DIR/linuxx64/linuxx64.cor/Webkit2gtk4.0/webkit2gtk-4.0.tar.gz" -C "$APPDIR/opt/Citrix/ICAClient/webkit" --strip-components=1 2>/dev/null || true
 
+# Copy only the GIO TLS module (from glib-networking) — needed for HTTPS/SAML
+# We do NOT copy libgiolibproxy.so as it causes segfaults with bundled GTK
+echo "Setting up GIO TLS module..."
+mkdir -p "$APPDIR/usr/lib/gio/modules"
+for giodir in /usr/lib/x86_64-linux-gnu/gio/modules /usr/lib64/gio/modules /usr/lib/gio/modules; do
+    if [ -d "$giodir" ]; then
+        # Copy gnutls or openssl TLS backend
+        for tlsmod in "$giodir/libgiognutls.so" "$giodir/libgioopenssl.so"; do
+            if [ -f "$tlsmod" ]; then
+                echo "Found GIO TLS module: $tlsmod"
+                cp -L "$tlsmod" "$APPDIR/usr/lib/gio/modules/"
+            fi
+        done
+        # Also copy the gvfs dnssd module if present (helps with network discovery)
+        break
+    fi
+done
+# Generate the GIO module cache for our curated directory
+if command -v gio-querymodules &>/dev/null; then
+    gio-querymodules "$APPDIR/usr/lib/gio/modules" 2>/dev/null || true
+fi
+
 # Gather dependencies
 echo "Gathering system dependencies..."
 curl -L -s -o excludelist https://raw.githubusercontent.com/AppImageCommunity/pkg2appimage/master/excludelist
@@ -365,9 +387,9 @@ export GTK_PATH=""
 export GTK_IM_MODULE="xim"
 export GDK_PIXBUF_MODULE_FILE=""
 
-# NOTE: Do NOT override GIO_MODULE_DIR or GIO_EXTRA_MODULES.
-# glib-networking provides the GIO TLS backend (libgiognutls.so) that
-# libsoup needs for HTTPS. Blocking GIO modules breaks TLS entirely.
+# Point GIO to our curated module directory (contains only the TLS backend)
+# This prevents loading libgiolibproxy.so from the host which causes segfaults
+export GIO_MODULE_DIR="$APPDIR/usr/lib/gio/modules"
 
 # Disable accessibility bridge to prevent crashes
 export NO_AT_BRIDGE=1
