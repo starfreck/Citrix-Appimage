@@ -312,33 +312,36 @@ APPDIR="$(dirname "$(readlink -f "${0}")")"
 # Set ICAROOT for Citrix Workspace
 export ICAROOT="$APPDIR/opt/Citrix/ICAClient"
 
-# Prepend our gathered libs and the bundled Webkit libs
-export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/opt/Citrix/ICAClient/webkit/usr/lib/x86_64-linux-gnu:$ICAROOT:$ICAROOT/lib:$LD_LIBRARY_PATH"
-export LD_PRELOAD="$APPDIR/webkit_hook.so:$LD_PRELOAD"
+# Build LD_LIBRARY_PATH based on debug flags
+# CITRIX_NO_BUNDLE=1 - skip usr/lib (test if bundled libs cause the crash)
+if [ "${CITRIX_NO_BUNDLE:-0}" = "1" ]; then
+    echo "[DEBUG] Skipping bundled usr/lib"
+    export LD_LIBRARY_PATH="$APPDIR/opt/Citrix/ICAClient/webkit/usr/lib/x86_64-linux-gnu:$ICAROOT:$ICAROOT/lib:$LD_LIBRARY_PATH"
+else
+    export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/opt/Citrix/ICAClient/webkit/usr/lib/x86_64-linux-gnu:$ICAROOT:$ICAROOT/lib:$LD_LIBRARY_PATH"
+fi
 
-# Set WebKit execution path so it can find its helper processes like WebKitNetworkProcess
+# Only load the webkit hook if not disabled (set CITRIX_NO_HOOK=1 to test without it)
+if [ "${CITRIX_NO_HOOK:-0}" != "1" ]; then
+    export LD_PRELOAD="$APPDIR/webkit_hook.so${LD_PRELOAD:+:$LD_PRELOAD}"
+fi
+
+# Set WebKit execution path
 export WEBKIT_EXEC_PATH="$APPDIR/opt/Citrix/ICAClient/webkit/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0"
 export WEBKIT_EXEC_DIR="$APPDIR/opt/Citrix/ICAClient/webkit/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0"
 export WEBKIT_INJECTED_BUNDLE_PATH="$APPDIR/opt/Citrix/ICAClient/webkit/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0/injected-bundle"
 
-# Set XDG_DATA_DIRS if necessary for WebKit
+# Set XDG_DATA_DIRS
 export XDG_DATA_DIRS="$APPDIR/usr/share:$XDG_DATA_DIRS"
 
-# Force X11 backend as Citrix has issues with Wayland in some AppImage environments
+# Force X11 backend
 export GDK_BACKEND=x11
 
-# WebKit tweaks for better compatibility with SAML flows and hardware
+# WebKit tweaks
 export WEBKIT_DISABLE_COMPOSITING_MODE=1
-export WEBKIT_FORCE_COMPOSITING_MODE=0
-export WEBKIT_WEB_PROCESS_SANDBOX_DISABLE=1
-export WEBKIT_USE_SINGLE_WEB_PROCESS=1
 
-# Help GTK find modules on the host to avoid "Failed to load module" errors
-export GTK_PATH="/usr/lib/x86_64-linux-gnu/gtk-3.0:/usr/lib/x86_64-linux-gnu/gtk-2.0:/usr/lib/gtk-3.0:/usr/lib/gtk-2.0"
-
-# GStreamer tweaks to prevent registry issues and potential crashes
-export GST_REGISTRY_REUSE=1
-export GST_PLUGIN_SYSTEM_PATH_1_0="/usr/lib/x86_64-linux-gnu/gstreamer-1.0:/usr/lib/gstreamer-1.0"
+# Help GTK find modules on the host
+export GTK_PATH="/usr/lib/x86_64-linux-gnu/gtk-3.0:/usr/lib/x86_64-linux-gnu/gtk-2.0:/usr/lib64/gtk-3.0:/usr/lib64/gtk-2.0:/usr/lib/gtk-3.0:/usr/lib/gtk-2.0"
 
 # Disable accessibility bridge to prevent crashes
 export NO_AT_BRIDGE=1
@@ -358,6 +361,17 @@ for cfg in All_Regions.ini All_REGIONS.ini appsrv.ini wfclient.ini module.ini; d
         cp "$ICAROOT/config/$cfg" "$HOME/.ICAClient/$cfg"
     fi
 done
+
+# LD_DEBUG must be set BEFORE exec to take effect
+if [ "${CITRIX_DEBUG:-0}" = "1" ]; then
+    echo "[DEBUG] LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+    echo "[DEBUG] LD_PRELOAD=$LD_PRELOAD"
+    echo "[DEBUG] Bundled libs:"
+    ls "$APPDIR/usr/lib/" 2>/dev/null
+fi
+if [ "${CITRIX_DEBUG:-0}" = "2" ]; then
+    export LD_DEBUG=libs
+fi
 
 # Run wfica if passed an .ica file, else run selfservice
 if [ "$#" -ge 1 ] && [[ "$1" == *.ica ]]; then
