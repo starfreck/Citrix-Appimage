@@ -175,7 +175,7 @@ curl -L -s -o excludelist https://raw.githubusercontent.com/AppImageCommunity/pk
 grep -v '^#' excludelist | grep -v '^$' > excludelist.clean
 
 # Explicitly add core libraries to excludelist to prevent bundling them
-# Bundling these often breaks libsecret, GStreamer, or other host integrations
+# Bundling these causes ABI mismatches with host GTK modules, themes, and input methods
 cat >> excludelist.clean <<EOF
 libglib-2.0.so.0
 libgobject-2.0.so.0
@@ -195,6 +195,63 @@ libcrypto.so.3
 libssl.so.3
 libz.so.1
 libsystemd.so.0
+libgtk-3.so.0
+libgdk-3.so.0
+libgdk_pixbuf-2.0.so.0
+libcairo.so.2
+libcairo-gobject.so.2
+libpango-1.0.so.0
+libpangocairo-1.0.so.0
+libpangoft2-1.0.so.0
+libatk-1.0.so.0
+libatk-bridge-2.0.so.0
+libatspi.so.0
+libepoxy.so.0
+libffi.so.8
+libffi.so.7
+libpixman-1.so.0
+libfontconfig.so.1
+libfreetype.so.6
+libharfbuzz.so.0
+libfribidi.so.0
+libdatrie.so.1
+libthai.so.0
+libXi.so.6
+libXrandr.so.2
+libXcursor.so.1
+libXcomposite.so.1
+libXdamage.so.1
+libXfixes.so.3
+libXinerama.so.1
+libXext.so.6
+libXrender.so.1
+libX11.so.6
+libxcb.so.1
+libwayland-client.so.0
+libwayland-cursor.so.0
+libwayland-egl.so.1
+libcups.so.2
+libavahi-client.so.3
+libavahi-common.so.3
+libfuse3.so.3
+libcap.so.2
+libcurl.so.4
+libgssapi_krb5.so.2
+libkrb5.so.3
+libk5crypto.so.3
+libkrb5support.so.0
+libkeyutils.so.1
+liblber.so.2
+libldap.so.2
+libnss3.so
+libnssutil3.so
+libnspr4.so
+libgnutls.so.30
+libnettle.so.8
+libhogweed.so.6
+libp11-kit.so.0
+libmd.so.0
+libbsd.so.0
 EOF
 
 # List of explicit libraries to include for authentication and hardware acceleration
@@ -270,22 +327,69 @@ while read -r dep; do
 done < all_deps.txt
 
 # Final safeguard: Remove core libraries that should never be bundled
+# GTK3 and rendering stack — MUST come from host or GTK modules crash
+rm -f "$APPDIR/usr/lib/libgtk-3.so"*
+rm -f "$APPDIR/usr/lib/libgdk-3.so"*
+rm -f "$APPDIR/usr/lib/libgdk_pixbuf-2.0.so"*
+rm -f "$APPDIR/usr/lib/libcairo.so"*
+rm -f "$APPDIR/usr/lib/libcairo-gobject.so"*
+rm -f "$APPDIR/usr/lib/libpango"*.so*
+rm -f "$APPDIR/usr/lib/libatk"*.so*
+rm -f "$APPDIR/usr/lib/libatspi.so"*
+rm -f "$APPDIR/usr/lib/libepoxy.so"*
+rm -f "$APPDIR/usr/lib/libpixman"*.so*
+rm -f "$APPDIR/usr/lib/libfontconfig.so"*
+rm -f "$APPDIR/usr/lib/libfreetype.so"*
+rm -f "$APPDIR/usr/lib/libharfbuzz.so"*
+rm -f "$APPDIR/usr/lib/libfribidi.so"*
+rm -f "$APPDIR/usr/lib/libdatrie.so"*
+rm -f "$APPDIR/usr/lib/libthai.so"*
+# GLib/GObject stack
 rm -f "$APPDIR/usr/lib/libglib-2.0.so.0"*
 rm -f "$APPDIR/usr/lib/libgobject-2.0.so.0"*
 rm -f "$APPDIR/usr/lib/libgio-2.0.so.0"*
 rm -f "$APPDIR/usr/lib/libgmodule-2.0.so.0"*
 rm -f "$APPDIR/usr/lib/libgthread-2.0.so.0"*
 rm -f "$APPDIR/usr/lib/libdbus-1.so.3"*
+rm -f "$APPDIR/usr/lib/libffi.so"*
+# C++ runtime
 rm -f "$APPDIR/usr/lib/libstdc++.so.6"*
 rm -f "$APPDIR/usr/lib/libgcc_s.so.1"*
 rm -f "$APPDIR/usr/lib/libpcre2-8.so.0"*
+# GStreamer
 rm -f "$APPDIR/usr/lib/libgst"*.so*
 rm -f "$APPDIR/usr/lib/libgstreamer"*.so*
-
+# Crypto/TLS
 rm -f "$APPDIR/usr/lib/libcrypto.so.3"*
 rm -f "$APPDIR/usr/lib/libssl.so.3"*
+rm -f "$APPDIR/usr/lib/libgnutls.so"*
+rm -f "$APPDIR/usr/lib/libnettle.so"*
+rm -f "$APPDIR/usr/lib/libhogweed.so"*
+rm -f "$APPDIR/usr/lib/libp11-kit.so"*
+# System
 rm -f "$APPDIR/usr/lib/libz.so.1"*
 rm -f "$APPDIR/usr/lib/libsystemd.so.0"*
+rm -f "$APPDIR/usr/lib/libfuse3.so"*
+rm -f "$APPDIR/usr/lib/libcap.so"*
+# Networking/Auth
+rm -f "$APPDIR/usr/lib/libcurl.so"*
+rm -f "$APPDIR/usr/lib/libgssapi_krb5.so"*
+rm -f "$APPDIR/usr/lib/libkrb5.so"*
+rm -f "$APPDIR/usr/lib/libk5crypto.so"*
+rm -f "$APPDIR/usr/lib/libkrb5support.so"*
+rm -f "$APPDIR/usr/lib/libkeyutils.so"*
+rm -f "$APPDIR/usr/lib/liblber.so"*
+rm -f "$APPDIR/usr/lib/libldap.so"*
+rm -f "$APPDIR/usr/lib/libnss"*.so*
+rm -f "$APPDIR/usr/lib/libnspr4.so"*
+rm -f "$APPDIR/usr/lib/libavahi"*.so*
+rm -f "$APPDIR/usr/lib/libcups.so"*
+rm -f "$APPDIR/usr/lib/libmd.so"*
+rm -f "$APPDIR/usr/lib/libbsd.so"*
+# X11/Wayland
+rm -f "$APPDIR/usr/lib/libX"*.so*
+rm -f "$APPDIR/usr/lib/libxcb.so"*
+rm -f "$APPDIR/usr/lib/libwayland"*.so*
 
 rm all_deps.txt excludelist excludelist.clean
 
