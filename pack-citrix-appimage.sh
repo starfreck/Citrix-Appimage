@@ -387,9 +387,8 @@ export GTK_PATH=""
 export GTK_IM_MODULE="xim"
 export GDK_PIXBUF_MODULE_FILE=""
 
-# Point GIO to our curated module directory (contains only the TLS backend)
-# This prevents loading libgiolibproxy.so from the host which causes segfaults
-export GIO_MODULE_DIR="$APPDIR/usr/lib/gio/modules"
+# Let GIO use host modules (the TLS backend needs the host's GLib/GnuTLS stack)
+# Do NOT override GIO_MODULE_DIR here
 
 # Disable accessibility bridge to prevent crashes
 export NO_AT_BRIDGE=1
