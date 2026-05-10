@@ -102,6 +102,15 @@ int open(const char *pathname, int flags, ...) {
 void* dlopen(const char* filename, int flags) {
     static void* (*orig)(const char*, int) = NULL;
     if (!orig) orig = dlsym(RTLD_NEXT, "dlopen");
+
+    // Block GIO modules that cause segfaults in AppImage environment
+    if (filename) {
+        if (strstr(filename, "libgiolibproxy.so") ||
+            strstr(filename, "libgiognomeproxy.so")) {
+            return NULL;
+        }
+    }
+
     char buf[1024];
     return orig(redirect(filename, buf, sizeof(buf)), flags);
 }
