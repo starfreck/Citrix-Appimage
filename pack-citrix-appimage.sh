@@ -365,10 +365,9 @@ export GTK_PATH=""
 export GTK_IM_MODULE="xim"
 export GDK_PIXBUF_MODULE_FILE=""
 
-# Prevent GIO from loading host modules (same ABI mismatch issue as GTK)
-export GIO_EXTRA_MODULES=""
-export GIO_MODULE_DIR="$APPDIR/gio-modules-dummy"
-mkdir -p "$APPDIR/gio-modules-dummy" 2>/dev/null || true
+# NOTE: Do NOT override GIO_MODULE_DIR or GIO_EXTRA_MODULES.
+# glib-networking provides the GIO TLS backend (libgiognutls.so) that
+# libsoup needs for HTTPS. Blocking GIO modules breaks TLS entirely.
 
 # Disable accessibility bridge to prevent crashes
 export NO_AT_BRIDGE=1
