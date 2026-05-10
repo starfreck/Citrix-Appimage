@@ -159,6 +159,9 @@ elif [ -f "$APPDIR/opt/Citrix/ICAClient/nls/en/eula.txt" ]; then
     cp "$APPDIR/opt/Citrix/ICAClient/nls/en/eula.txt" "$APPDIR/opt/Citrix/ICAClient/eula.txt"
 fi
 
+# Final configuration adjustments
+echo "BrowserAuth=True" >> "$APPDIR/opt/Citrix/ICAClient/config/All_Regions.ini"
+
 # Extract bundled WebKit and other potential dependencies
 echo "Extracting bundled WebKit..."
 mkdir -p "$APPDIR/opt/Citrix/ICAClient/webkit"
@@ -194,13 +197,8 @@ libz.so.1
 libsystemd.so.0
 EOF
 
-# List of explicit libraries to include for secret storage, authentication, and hardware acceleration
+# List of explicit libraries to include for authentication and hardware acceleration
 EXPLICIT_LIBS=(
-    "libsecret-1.so.0"
-    "libgnome-keyring.so.0"
-    "libp11-kit.so.0"
-    "libck-connector.so.0"
-    "gnome-keyring-pkcs11.so"
     "libva.so.2"
     "libva-drm.so.2"
     "libva-x11.so.2"
@@ -332,6 +330,8 @@ export GDK_BACKEND=x11
 # WebKit tweaks for better compatibility with SAML flows and hardware
 export WEBKIT_DISABLE_COMPOSITING_MODE=1
 export WEBKIT_FORCE_COMPOSITING_MODE=0
+export WEBKIT_WEB_PROCESS_SANDBOX_DISABLE=1
+export WEBKIT_USE_SINGLE_WEB_PROCESS=1
 
 # Help GTK find modules on the host to avoid "Failed to load module" errors
 export GTK_PATH="/usr/lib/x86_64-linux-gnu/gtk-3.0:/usr/lib/x86_64-linux-gnu/gtk-2.0:/usr/lib/gtk-3.0:/usr/lib/gtk-2.0"
@@ -339,6 +339,9 @@ export GTK_PATH="/usr/lib/x86_64-linux-gnu/gtk-3.0:/usr/lib/x86_64-linux-gnu/gtk
 # GStreamer tweaks to prevent registry issues and potential crashes
 export GST_REGISTRY_REUSE=1
 export GST_PLUGIN_SYSTEM_PATH_1_0="/usr/lib/x86_64-linux-gnu/gstreamer-1.0:/usr/lib/gstreamer-1.0"
+
+# Disable accessibility bridge to prevent crashes
+export NO_AT_BRIDGE=1
 
 # Initialize user configuration directory if missing
 if [ ! -d "$HOME/.ICAClient" ]; then
