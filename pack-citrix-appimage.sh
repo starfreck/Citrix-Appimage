@@ -216,9 +216,6 @@ EXPLICIT_LIBS=(
     "libspeexdsp.so.1"
     "libnotify.so.4"
     "libopenjp2.so.7"
-    "libasound.so.2"
-    "libgtk-x11-2.0.so.0"
-    "libwebkit2gtk-4.1.so.0"
 )
 
 # Function to find and copy a library and its dependencies
@@ -335,6 +332,13 @@ export GDK_BACKEND=x11
 # WebKit tweaks for better compatibility with SAML flows and hardware
 export WEBKIT_DISABLE_COMPOSITING_MODE=1
 export WEBKIT_FORCE_COMPOSITING_MODE=0
+
+# Help GTK find modules on the host to avoid "Failed to load module" errors
+export GTK_PATH="/usr/lib/x86_64-linux-gnu/gtk-3.0:/usr/lib/x86_64-linux-gnu/gtk-2.0:/usr/lib/gtk-3.0:/usr/lib/gtk-2.0"
+
+# GStreamer tweaks to prevent registry issues and potential crashes
+export GST_REGISTRY_REUSE=1
+export GST_PLUGIN_SYSTEM_PATH_1_0="/usr/lib/x86_64-linux-gnu/gstreamer-1.0:/usr/lib/gstreamer-1.0"
 
 # Initialize user configuration directory if missing
 if [ ! -d "$HOME/.ICAClient" ]; then
